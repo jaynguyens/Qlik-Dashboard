@@ -132,33 +132,71 @@ To use our openSession and closeSession, we created a context API to provides ou
 
 Document about Context API - [reactjs.org](https://reactjs.org/docs/context.html),
 
-Create a `docProvider.js` in `enigma` folder
+Create a `AppProvider.js` in `enigma` folder
 
 ```javascript
 import React, { useState, useEffect, createContext } from "react";
 import { openSession, closeSession } from "./configSession";
 
-export const QDocContext = createContext();
+export const AppContext = createContext();
 
-const DocProvider = ({ children }) => {
-   const [qDoc, setqDoc] = useState();
+const AppProvider = ({ children }) => {
+   const [app, setApp] = useState();
 
    useEffect(() => {
-      const openDoc = async () => {
-         setqDoc(await openSession());
-      };
-      openDoc();
+      (async () => setApp(await openSession()))();
       return closeSession;
    }, []);
+
    return (
-      <React.StrictMode>
-         {qDoc && (
-            <QDocContext.Provider value={qDoc}>{children}</QDocContext.Provider>
+      <>
+         {app && (
+            <AppContext.Provider value={app}> {children}</AppContext.Provider>
          )}
-      </React.StrictMode>
+      </>
    );
 };
-export default DocProvider;
+
+export default AppProvider;
 ```
 
-To use what we just created, we are going to fetch the object of one of the chart in Qlik Sense.
+Now that we have a way to connect to qlik and interact with the Qlik Engine. Before we are going to do anything else - we need to import our `AppProvider` function in `index.js` and wrap it around the `App.js` function.
+
+```javascript
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import AppProvider from "./enigma/appProvider";
+import App from "./App";
+
+ReactDOM.render(
+   <React.StrictMode>
+      <AppProvider>
+         <App />
+      </AppProvider>
+   </React.StrictMode>,
+   document.getElementById("root")
+);
+```
+
+### Peek into next section
+
+In `App.js`, we use `AppContext` to fetch the value `app`.
+
+```javascript
+const app = useContext(QlikContext);
+```
+
+and useEffect to get the data -- why use useEffect instead of do it?
+
+```javascript
+useEffect(() => {
+   (async function() {
+      const model = await app.getObject("JLTp");
+      const layout = await model.getLayout();
+      setData({ model, layout });
+   })();
+}, [app, objectId]);
+```
+
+which result a return of
