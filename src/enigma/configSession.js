@@ -25,6 +25,6 @@ const openSession = async () => {
    return document;
 };
 
-const closeSession = () => session.close();
+const closeSession = async () => await session.close();
 
 export { openSession, closeSession };
